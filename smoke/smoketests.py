@@ -26,12 +26,12 @@ class SmokeTests(object):
             self.app_config.app_url(),
             self.app_config.vars(),
             self.app_config.ssl_verify(),
-            self.utils
+            self.utils,
         )
         self.tests_path = self.utils.get_path(basepath, tests_path)
         self.tests_to_run = {}
         self.verbose = False
-        self.filtered_class = ''
+        self.filtered_class = ""
         self.single_test = None
         self.total_tests = 0
 
@@ -41,12 +41,13 @@ class SmokeTests(object):
 
     def set_filter(self, filtered_class):
         "Set the filtered class to run"
-        if filtered_class and ':' in filtered_class:
-            parts = filtered_class.split(':')
-            self.filtered_class = parts[0] + '.json'
+        if filtered_class and ":" in filtered_class:
+            parts = filtered_class.split(":")
+            self.filtered_class = parts[0] + ".json"
             self.single_test = parts[1]
         else:
-            self.filtered_class = filtered_class + '.json'
+            if self.filtered_class:
+                self.filtered_class = filtered_class + ".json"
 
     def run(self):
         "Load and run the tests"
@@ -73,16 +74,13 @@ class SmokeTests(object):
         tests_to_run = {}
         # if we have a single test
         if self.single_test:
-            index = '{0}::{1}::{2}'.format(filename, 0, self.single_test)
-            tests_to_run[index] = self.options(
-                self.tests_config,
-                self.single_test
-            )
+            index = "{0}::{1}::{2}".format(filename, 0, self.single_test)
+            tests_to_run[index] = self.options(self.tests_config, self.single_test)
             return tests_to_run
         # load all sections
         for section in self.tests_config.sections():
             id = uuid.uuid1()
-            index = '{0}::{1}::{2}'.format(filename, id.hex, section)
+            index = "{0}::{1}::{2}".format(filename, id.hex, section)
             tests_to_run[index] = self.options(self.tests_config, section)
         return tests_to_run
 
@@ -95,11 +93,13 @@ class SmokeTests(object):
     def run_tests(self, key):
         "Run the test"
         # display wich test are we running
-        index_parts = key.split('::')
-        error_index = '{0} :: {1}'.format(self.utils.get_test_name(index_parts[0]), index_parts[2])
+        index_parts = key.split("::")
+        error_index = "{0} :: {1}".format(
+            self.utils.get_test_name(index_parts[0]), index_parts[2]
+        )
         # end display
         test = self.tests_to_run[key]
-        tests = self.__parse_tests(test['tests'])
+        tests = self.__parse_tests(test["tests"])
         # total tests to run
         self.total_tests += len(tests)
         # make the call
@@ -107,20 +107,11 @@ class SmokeTests(object):
         # verbose mode
         if self.verbose:
             self.__verbose(
-                test['method'],
-                index_parts[0],
-                index_parts[1],
-                test,
-                response
+                test["method"], index_parts[0], index_parts[1], test, response
             )
         # run tests  on the response
-        self.validator.test(
-            self.verbose,
-            response['response'],
-            tests,
-            error_index
-        )
-        
+        self.validator.test(self.verbose, response["response"], tests, error_index)
+
     def __parse_tests(self, tests_object):
         "Parse tests string to convert it to object"
         valid_tests = []
@@ -129,7 +120,7 @@ class SmokeTests(object):
             value = tests_object[i]
             if isinstance(value, list):
                 for j in value:
-                    index = '{0}.{1}'.format(key, value.index(j))
+                    index = "{0}.{1}".format(key, value.index(j))
                     valid_tests.append((index, self.utils.guess_value(j)))
             else:
                 valid_tests.append((key, self.utils.guess_value(value)))
@@ -149,12 +140,11 @@ class SmokeTests(object):
         total_errors = len(errors)
         # display errors
         if total_errors > 0:
-            print('Executed {0} tests found {1} errors'.format(
-                total_tests,
-                total_errors
-            ))
+            print(
+                "Executed {0} tests found {1} errors".format(total_tests, total_errors)
+            )
             for error in errors:
-                print('{0}'.format(error))
+                print("{0}".format(error))
         # exit program
         if total_errors > 0:
             sys.exit(1)
@@ -163,11 +153,11 @@ class SmokeTests(object):
     @staticmethod
     def __verbose(method, filename, testname, test, response):
         "Print request and response data"
-        print('Test: {0} :: {1}'.format(filename, testname))
-        print('Endpoint: {0}'.format(response['url']))
-        print('Method: {0}'.format(method))
-        print('Authorization: {0}'.format(test['authorization']))
-        print('Payload: {0}'.format(response['payload']))
-        for item in response['response']:
-            print('Response {0}: {1}'.format(item, response['response'][item]))
-        print('')
+        print("Test: {0} :: {1}".format(filename, testname))
+        print("Endpoint: {0}".format(response["url"]))
+        print("Method: {0}".format(method))
+        print("Authorization: {0}".format(test["authorization"]))
+        print("Payload: {0}".format(response["payload"]))
+        for item in response["response"]:
+            print("Response {0}: {1}".format(item, response["response"][item]))
+        print("")
